@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angelic Design — Design Brief</title>
+<style>
+  :root {
+    --purple: #3B0764;
+    --gold: #E8A33D;
+    --text-primary: #1f1f1f;
+    --text-secondary: #555555;
+    --text-muted: #888888;
+    --border: #e0e0e0;
+    --border-strong: #c9c9c9;
+    --surface: #ffffff;
+    --bg-page: #f7f5fa;
+    --bg-accent: #f3eefa;
+    --danger: #c0392b;
+    --success: #1e7e45;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    margin: 0;
+    padding: 2rem 1rem 4rem;
+  }
+  #app { max-width: 640px; margin: 0 auto; background: var(--surface); border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .brand-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; border-bottom: 3px solid var(--gold); padding-bottom: 1rem; }
+  .brand-bar .mark { width: 28px; height: 28px; }
+  .brand-bar .name { font-weight: 700; font-size: 18px; color: var(--purple); }
+  h1 { font-size: 24px; margin: 0 0 4px; color: var(--purple); }
+  .subtitle { color: var(--text-secondary); font-size: 14px; margin: 0 0 1.5rem; }
+  .ad-section { margin-bottom: 2rem; }
+  .ad-section h2 { font-size: 17px; color: var(--purple); border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 1rem; }
+  .ad-field { margin-bottom: 1.25rem; }
+  .ad-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .ad-req { color: var(--danger); }
+  .ad-hint { font-size: 13px; color: var(--text-muted); margin: 0 0 6px; }
+  .ad-options { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ad-chip { border: 1px solid var(--border-strong); border-radius: 8px; padding: 6px 14px; font-size: 14px; cursor: pointer; background: var(--surface); user-select: none; transition: all 0.15s; }
+  .ad-chip.selected { background: var(--bg-accent); border-color: var(--purple); color: var(--purple); font-weight: 600; }
+  textarea, input[type=text], input[type=date] {
+    width: 100%; font-size: 14px; padding: 8px 10px; border: 1px solid var(--border-strong);
+    border-radius: 8px; font-family: inherit; color: var(--text-primary); background: var(--surface);
+  }
+  textarea { min-height: 70px; resize: vertical; }
+  input:focus, textarea:focus { outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px rgba(59,7,100,0.1); }
+  .ad-success { text-align: center; padding: 3rem 1rem; }
+  .ad-success .check { font-size: 40px; color: var(--success); margin-bottom: 8px; }
+  .ad-error { color: var(--danger); font-size: 13px; margin-top: 4px; }
+  .ad-submit-row { display: flex; justify-content: flex-end; margin-top: 1.5rem; }
+  button {
+    background: var(--purple); color: #fff; border: none; border-radius: 8px;
+    padding: 10px 22px; font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  button:hover { background: #2a0550; }
+  button:disabled { opacity: 0.6; cursor: not-allowed; }
+  .footer-note { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 1.5rem; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+
+<script>
+const { useState } = React;
+const h = React.createElement;
+
+function Chips({ options, selected, onToggle }) {
+  return h('div', { className: 'ad-options' }, options.map(opt =>
+    h('div', {
+      key: opt,
+      className: 'ad-chip' + (selected.includes(opt) ? ' selected' : ''),
+      onClick: () => onToggle(opt)
+    }, opt)
+  ));
+}
+
+function Field({ label, required, hint, children }) {
+  return h('div', { className: 'ad-field' },
+    h('label', { className: 'ad-label' }, label, required ? h('span', { className: 'ad-req' }, ' *') : null),
+    hint ? h('p', { className: 'ad-hint' }, hint) : null,
+    children
+  );
+}
+
+function App() {
+  const [form, setForm] = useState({
+    name: '', phone: '', email: '', social: '',
+    services: [], serviceOther: '',
+    businessDesc: '', goal: '', audience: '',
+    hasLogo: '', logoFeel: [], logoType: '',
+    colors: '', avoidColors: '', styleRefs: '', fonts: '',
+    copyText: '', tagline: '', formats: [], hasAssets: '',
+    deadline: '', budget: '', revisions: '', contactMethod: '',
+    extra: ''
+  });
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }));
+  const toggle = (key, multi = true) => (opt) => setForm(f => {
+    if (multi) {
+      const arr = f[key];
+      return { ...f, [key]: arr.includes(opt) ? arr.filter(x => x !== opt) : [...arr, opt] };
+    }
+    return { ...f, [key]: f[key] === opt ? '' : opt };
+  });
+
+  function handleSubmit() {
+    setError('');
+    if (!form.name || !form.phone || !form.email) {
+      setError('Please fill in your name, phone, and email before submitting.');
+      return;
+    }
+    if (form.services.length === 0) {
+      setError('Please select at least one service.');
+      return;
+    }
+    if (!form.businessDesc || !form.goal) {
+      setError('Please describe your business and the goal of this design.');
+      return;
+    }
+    setSubmitting(true);
+
+    // Build a mailto link with the brief contents so the submission
+    // reaches Angelic Design directly. Replace the address below with
+    // your preferred inbox if different.
+    const lines = [
+      'NEW DESIGN BRIEF SUBMISSION',
+      '',
+      '--- Client Information ---',
+      'Name/Business: ' + form.name,
+      'Phone/WhatsApp: ' + form.phone,
+      'Email: ' + form.email,
+      'Social: ' + form.social,
+      '',
+      '--- Project Overview ---',
+      'Services: ' + (form.services.join(', ') || '-') + (form.serviceOther ? ' (' + form.serviceOther + ')' : ''),
+      'Business description: ' + form.businessDesc,
+      'Goal: ' + form.goal,
+      'Audience: ' + form.audience,
+      '',
+      '--- Logo Details ---',
+      'Existing logo notes: ' + form.hasLogo,
+      'Feel: ' + (form.logoFeel.join(', ') || '-'),
+      'Type: ' + (form.logoType || '-'),
+      '',
+      '--- Visual Direction ---',
+      'Colors: ' + form.colors,
+      'Avoid: ' + form.avoidColors,
+      'Style refs: ' + form.styleRefs,
+      'Fonts: ' + form.fonts,
+      '',
+      '--- Content & Deliverables ---',
+      'Required copy: ' + form.copyText,
+      'Tagline: ' + form.tagline,
+      'Formats: ' + (form.formats.join(', ') || '-'),
+      'Has assets: ' + (form.hasAssets || '-'),
+      '',
+      '--- Logistics ---',
+      'Deadline: ' + form.deadline,
+      'Budget: ' + form.budget,
+      'Revisions: ' + form.revisions,
+      'Contact method: ' + form.contactMethod,
+      'Extra notes: ' + form.extra
+    ];
+    const body = encodeURIComponent(lines.join('\n'));
+    const subject = encodeURIComponent('Design Brief — ' + form.name);
+    window.location.href = 'mailto:mustaphaopeyemi821@gmail.com?subject=' + subject + '&body=' + body;
+
+    setTimeout(() => {
+      setSubmitted(true);
+      setSubmitting(false);
+    }, 400);
+  }
+
+  if (submitted) {
+    return h('div', { className: 'ad-success' },
+      h('div', { className: 'check' }, '✓'),
+      h('h2', null, 'Brief ready to send'),
+      h('p', { style: { color: 'var(--text-secondary)' } }, 'Your email app should have opened with the brief pre-filled. Just hit send to deliver it to Angelic Design.')
+    );
+  }
+
+  return h('div', null,
+    h('div', { className: 'brand-bar' },
+      h('span', { className: 'name' }, 'Angelic Design')
+    ),
+    h('h1', null, 'Design Brief'),
+    h('p', { className: 'subtitle' }, 'Graphic Design & Logo Design — please fill out as completely as possible.'),
+
+    h('div', { className: 'ad-section' },
+      h('h2', null, '1. Client information'),
+      h(Field, { label: 'Name / business name', required: true },
+        h('input', { type: 'text', value: form.name, onChange: set('name'), placeholder: 'Your name or business name' })),
+      h(Field, { label: 'Phone / WhatsApp', required: true },
+        h('input', { type: 'text', value: form.phone, onChange: set('phone'), placeholder: '+234...' })),
+      h(Field, { label: 'Email', required: true },
+        h('input', { type: 'text', value: form.email, onChange: set('email'), placeholder: 'name@email.com' })),
+      h(Field, { label: 'Instagram / social handle' },
+        h('input', { type: 'text', value: form.social, onChange: set('social'), placeholder: '@yourbrand' }))
+    ),
+
+    h('div', { className: 'ad-section' },
+      h('h2', null, '2. Project overview'),
+      h(Field, { label: 'What service do you need?', required: true },
+        h(Chips, { options: ['Logo Design', 'Flyer / Poster', 'Social Media Graphics', 'Brand Kit / Identity', 'Business Card', 'Other'], selected: form.services, onToggle: toggle('services') })),
+      form.services.includes('Other') ? h(Field, { label: 'If other, please specify' },
+        h('input', { type: 'text', value: form.serviceOther, onChange: set('serviceOther') })) : null,
+      h(Field, { label: 'Describe your business / brand in a few sentences', required: true },
+        h('textarea', { value: form.businessDesc, onChange: set('businessDesc') })),
+      h(Field, { label: 'What is the goal of this design?', required: true, hint: 'e.g. promote an event, launch a product, build brand awareness' },
+        h('textarea', { value: form.goal, onChange: set('goal') })),
+      h(Field, { label: 'Who is your target audience?' },
+        h('textarea', { value: form.audience, onChange: set('audience') }))
+    ),
+
+    h('div', { className: 'ad-section' },
+      h('h2', null, '3. Logo design details'),
+      h('p', { className: 'ad-hint' }, 'Skip this section if not applicable.'),
+      h(Field, { label: 'Do you already have a logo? If yes, what do you want changed or improved?' },
+        h('textarea', { value: form.hasLogo, onChange: set('hasLogo') })),
+      h(Field, { label: 'What feeling should the logo convey?' },
+        h(Chips, { options: ['Bold', 'Elegant', 'Playful', 'Minimal', 'Luxury', 'Edgy'], selected: form.logoFeel, onToggle: toggle('logoFeel') })),
+      h(Field, { label: 'Do you need:' },
+        h(Chips, { options: ['Icon/symbol only', 'Text/wordmark only', 'Combination mark', 'Not sure'], selected: form.logoType ? [form.logoType] : [], onToggle: toggle('logoType', false) }))
+    ),
+
+    h('div', { className: 'ad-section' },
+      h('h2', null, '4. Visual direction'),
+      h(Field, { label: 'Preferred color(s)', required: true, hint: 'Include brand colors if you have any' },
+        h('input', { type: 'text', value: form.colors, onChange: set('colors') })),
+      h(Field, { label: 'Colors to avoid' },
+        h('input', { type: 'text', value: form.avoidColors, onChange: set('avoidColors') })),
+      h(Field, { label: 'Style references', hint: 'List brands or designs you like' },
+        h('textarea', { value: form.styleRefs, onChange: set('styleRefs') })),
+      h(Field, { label: 'Fonts you like, or general style' },
+        h('input', { type: 'text', value: form.fonts, onChange: set('fonts'), placeholder: 'modern, classic, handwritten...' }))
+    ),
+
+    h('div', { className: 'ad-section' },
+      h('h2', null, '5. Content and deliverables'),
+      h(Field, { label: 'What text/copy must be included?', required: true, hint: 'business name, tagline, contact info, etc.' },
+        h('textarea', { value: form.copyText, onChange: set('copyText') })),
+      h(Field, { label: 'Do you have a tagline / slogan?' },
+        h('input', { type: 'text', value: form.tagline, onChange: set('tagline') })),
+      h(Field, { label: 'Format(s) needed', required: true },
+        h(Chips, { options: ['Instagram Post', 'Instagram Story', 'Print (Flyer/Poster)', 'Web/Digital Banner', 'Other'], selected: form.formats, onToggle: toggle('formats') })),
+      h(Field, { label: 'Do you have existing assets to share?', hint: 'logo files, photos, brand guide' },
+        h(Chips, { options: ['Yes — will send', 'No'], selected: form.hasAssets ? [form.hasAssets] : [], onToggle: toggle('hasAssets', false) }))
+    ),
+
+    h('div', { className: 'ad-section' },
+      h('h2', null, '6. Logistics'),
+      h(Field, { label: 'Deadline' },
+        h('input', { type: 'date', value: form.deadline, onChange: set('deadline') })),
+      h(Field, { label: 'Budget range' },
+        h('input', { type: 'text', value: form.budget, onChange: set('budget'), placeholder: 'e.g. \u20a650,000 - \u20a6100,000' })),
+      h(Field, { label: 'Number of revisions expected' },
+        h('input', { type: 'text', value: form.revisions, onChange: set('revisions') })),
+      h(Field, { label: 'Preferred contact method' },
+        h(Chips, { options: ['WhatsApp', 'Phone Call', 'Email', 'Instagram DM'], selected: form.contactMethod ? [form.contactMethod] : [], onToggle: toggle('contactMethod', false) })),
+      h(Field, { label: 'Anything else we should know?' },
+        h('textarea', { value: form.extra, onChange: set('extra') }))
+    ),
+
+    error ? h('p', { className: 'ad-error' }, error) : null,
+    h('div', { className: 'ad-submit-row' },
+      h('button', { onClick: handleSubmit, disabled: submitting }, submitting ? 'Preparing...' : 'Submit brief')
+    ),
+    h('p', { className: 'footer-note' }, 'Angelic Design \u2022 +234 703 986 9828')
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('app')).render(h(App));
+</script>
+</body>
+</html>
